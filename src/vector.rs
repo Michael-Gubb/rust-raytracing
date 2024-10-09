@@ -7,6 +7,9 @@ pub struct Vector3 {
     z: f64,
 }
 
+/// Any value below this is considered zero for division purposes.
+const EQUIV_ZERO: f64 = 0.0;
+
 impl Vector3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
@@ -21,22 +24,37 @@ impl Vector3 {
     pub fn dot_product(&self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
-    pub fn length_squared(&self) -> f64{
+    pub fn length_squared(&self) -> f64 {
         self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
-    pub fn length(&self) -> f64{
+    // Returns the length of the vector, can be equivalent to zero
+    pub fn unchecked_length(&self) -> f64 {
         self.length_squared().sqrt()
     }
-    pub fn normalised(&self) -> Option<(Self,f64)>{
-        const DIV_MIN:f64 = 0.0;
-        let length = self.length();
-        match length <= DIV_MIN {
-            true=>None,
-            false=>{
-                let normalised = Self{x:self.x/length,y:self.y/length,z:self.z/length};
-                return Some((normalised,length))
-            }
+    // Returns the length of the vector, None if equivalent to zero
+    pub fn length(&self) -> Option<f64> {
+        let length = self.unchecked_length();
+        if length <= EQUIV_ZERO {
+            return Some(length);
         }
+        None
+    }
+    /// Checks if the vector is equivalent length zero based on the minimum length DIV_MIN
+    pub fn is_zero_length(&self) -> bool {
+        self.unchecked_length() <= EQUIV_ZERO
+    }
+    /// Returns an Option containing normalised form of the vector alongside the length.
+    ///
+    /// Returns None if the length is equivalent to zero
+    pub fn normalised(&self) -> Option<(Self, f64)> {
+        self.length().map(|length| {
+            let normalised = Self {
+                x: self.x / length,
+                y: self.y / length,
+                z: self.z / length,
+            };
+            (normalised, length)
+        })
     }
 }
 
@@ -46,9 +64,21 @@ impl From<(f64, f64, f64)> for Vector3 {
     }
 }
 
+impl From<Vector3> for (f64, f64, f64) {
+    fn from(value: Vector3) -> Self {
+        (value.x, value.y, value.z)
+    }
+}
+
 impl From<[f64; 3]> for Vector3 {
     fn from(value: [f64; 3]) -> Self {
         Vector3::new(value[0], value[1], value[2])
+    }
+}
+
+impl From<Vector3> for [f64; 3] {
+    fn from(value: Vector3) -> Self {
+        [value.x, value.y, value.z]
     }
 }
 
@@ -107,5 +137,54 @@ mod tests {
         let expected_vector = Vector3::new(-1.0, 3.0, -4.2);
         let result = -test_vector;
         assert_eq!(result, expected_vector);
+    }
+    #[test]
+    fn from_array() {
+        let x = 0.0;
+        let y = 2.0;
+        let z = 0.0;
+        let test_array = [x, y, z];
+        let test_vector = Vector3::from(test_array);
+        let expected_vector = Vector3::new(x, y, z);
+        assert_eq!(test_vector, expected_vector);
+    }
+    #[test]
+    fn from_tuple() {
+        let x = 0.0;
+        let y = 2.0;
+        let z = -0.3;
+        let test_tuple = (x, y, z);
+        let test_vector = Vector3::from(test_tuple);
+        let expected_vector = Vector3::new(x, y, z);
+        assert_eq!(test_vector, expected_vector);
+    }
+    #[test]
+    fn into_array() {
+        let x = 0.0;
+        let y = 2.0;
+        let z = 0.0;
+        let expected_array = [x, y, z];
+        let test_vector = Vector3::new(x, y, z);
+        let test_array: [f64; 3] = test_vector.into();
+        assert_eq!(expected_array, test_array);
+    }
+    #[test]
+    fn into_tuple() {
+        let x = 0.0;
+        let y = 2.0;
+        let z = 0.0;
+        let expected_tuple = (x, y, z);
+        let test_vector = Vector3::new(x, y, z);
+        let test_tuple = test_vector.into();
+        assert_eq!(expected_tuple, test_tuple);
+    }
+    #[test]
+    fn normalised_vector() {
+        // A -3,4,0 vector (should be normalised to (-3/5,4/5,0) with length 5)
+        let test_vector = Vector3::new(-3.0, 4.0, 0.0);
+        let normalised_vector = test_vector.normalised();
+        let expected_vector = Vector3::new(-3.0 / 5.0, 4.0 / 5.0, 0.0);
+        let expected_length = 5.0;
+        assert_eq!(Some((expected_vector, expected_length)), normalised_vector);
     }
 }
