@@ -6,9 +6,9 @@ const EQUIV_ZERO: f64 = 0.0000001;
 #[derive(Debug, Clone, Copy, Default, PartialEq, PartialOrd)]
 
 pub struct Vector3 {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub(crate) x: f64,
+    pub(crate)y: f64,
+    pub(crate)z: f64,
 }
 
 impl Vector3 {
