@@ -2,13 +2,13 @@ use core::fmt;
 use std::ops::{Add, Mul, Neg, Sub};
 
 /// Any value below this is considered zero for division purposes.
-const EQUIV_ZERO: f64 = 0.0000001;
+const EQUIV_ZERO: f64 = 0.000_000_1;
 #[derive(Debug, Clone, Copy, Default, PartialEq, PartialOrd)]
 
 pub struct Vector3 {
     pub(crate) x: f64,
-    pub(crate)y: f64,
-    pub(crate)z: f64,
+    pub(crate) y: f64,
+    pub(crate) z: f64,
 }
 
 impl Vector3 {
@@ -22,9 +22,11 @@ impl Vector3 {
             z: self.z * scaling_factor,
         }
     }
+    #[inline]
     pub fn dot_product(&self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
+    #[inline]
     pub fn length_squared(&self) -> f64 {
         self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
@@ -140,7 +142,7 @@ impl fmt::Display for Vector3 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Vector3, EQUIV_ZERO};
 
     #[test]
     fn add_vectors() {

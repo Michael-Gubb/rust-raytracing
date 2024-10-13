@@ -1,5 +1,5 @@
-mod vector;
 mod ray;
+mod vector;
 
 use image::{ImageBuffer, ImageError, Rgb, RgbImage};
 use std::u8;
